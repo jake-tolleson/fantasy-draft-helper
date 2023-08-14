@@ -85,7 +85,7 @@ class draft_monitor:
                 urls.append(self.driver.current_url)
             draft_window = self.driver.window_handles[np.argmax([url.find('draft?') for url in urls])]
             self.driver.switch_to.window(draft_window)
-        
+            
         self.update_lineups()
         self.teams = len(self.team_map)
         self.myteam = list(self.team_map.keys())[list(self.team_map.values()).index(self.team_name)]
@@ -112,7 +112,7 @@ class draft_monitor:
             team_ele = self.driver.find_elements("xpath","/html/body/div[1]/div[1]/section/div/div[2]/main/div/div/div[3]/div[1]/div[1]/div[2]/div[2]/div/div/div/div/div[2]/table/tbody/tr")
             team = pd.DataFrame([r.text.splitlines() for r in team_ele])[[0,1]].rename(columns={0:'position',1:'player'})
             team['player'] = team['player'].replace('Empty', np.nan)
-            self.rosters[t.text] = team
+            self.rosters[tnum] = team
             self.team_map[tnum] = t.text
             #{v: k for k, v in self.team_map.items()}
             
@@ -168,15 +168,16 @@ class draft_monitor:
                 team = match.group(3).upper()
                 teams.append((draft_round, pick, team))
         
-        df = pd.DataFrame(zip(players, teams))
-        
-        # Unpack the DataFrame into 6 columns
-        unpacked_df = df.apply(lambda row: pd.Series(row[0] + row[1]), axis=1)
+        if (len(players) & len(teams)) > 0:
+            df = pd.DataFrame(zip(players, teams))
+            
+            # Unpack the DataFrame into 6 columns
+            unpacked_df = df.apply(lambda row: pd.Series(row[0] + row[1]), axis=1)
 
-        # Rename columns
-        unpacked_df.columns = ['Player', 'Team', 'Position', 'Round', 'Pick', 'Selecting Team']
-        
-        self.pick_history = pd.concat([self.pick_history, unpacked_df])
+            # Rename columns
+            unpacked_df.columns = ['Player', 'Team', 'Position', 'Round', 'Pick', 'Selecting Team']
+            
+            self.pick_history = unpacked_df.copy()
 
         pass
 
