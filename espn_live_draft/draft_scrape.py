@@ -1,8 +1,8 @@
 from selenium import webdriver 
 import pandas as pd 
 import numpy as np
+import re
 
-oc_mult = dict(zip(['QB','RB','WR','TE','K','DST'],[.3,.5,.5,.3,.15,.15]))
 
 flex_positions = ['RB','WR','TE']
 
@@ -62,6 +62,7 @@ class draft_monitor:
         self.driver.get(r'https://www.espn.com')
         self.rosters = {}
         self.team_map = {}
+        self.pick_history = pd.DataFrame(columns=['Player', 'Team', 'Position', 'Round', 'Pick', 'Selecting Team'])
         pass
     
     def configure_draft(self):
@@ -75,7 +76,17 @@ class draft_monitor:
             figure out what positions are required for your league
         
         """
-        self.update_rosters()
+        
+        # Navigate to draft tab
+        if self.driver.current_url.find('draft') < 0:
+            urls = []
+            for window in self.driver.window_handles:
+                self.driver.switch_to.window(window)
+                urls.append(self.driver.current_url)
+            draft_window = self.driver.window_handles[np.argmax([url.find('draft?') for url in urls])]
+            self.driver.switch_to.window(draft_window)
+        
+        self.update_lineups()
         self.teams = len(self.team_map)
         self.myteam = list(self.team_map.keys())[list(self.team_map.values()).index(self.team_name)]
         self.mypick = list(self.team_map.values()).index(self.team_name) + 1
@@ -93,37 +104,82 @@ class draft_monitor:
     def pick_(self):
         return self.current_pick - 1 % self.teams + 1
     
-    def update_rosters(self,specific_team=None):
-        """
-        This function scrapes the current team and rosters to keep track of 
-        who has drafted who.
-        
-        If you only want to update 1 team (like yours), use the optional arg.
-        "specific_team" which accepts an integer and correspond to the team's
-        index within self.teams.
-        """
-        self.driver.switch_to.window(self.driver.window_handles[1])
+    def update_lineups(self):
         teams = self.driver.find_elements("xpath", "/html/body/div[1]/div[1]/section/div/div[2]/main/div/div/div[3]/div[1]/div[1]/div[2]/div[1]/div/select/option")
-        if specific_team is None:
-            for t in teams:
-                t.click()
-                tnum = int(t.get_property('value'))
-                team_ele = self.driver.find_elements("xpath","/html/body/div[1]/div[1]/section/div/div[2]/main/div/div/div[3]/div[1]/div[1]/div[2]/div[2]/div/div/div/div/div[2]/table/tbody/tr")
-                team = pd.DataFrame([r.text.splitlines() for r in team_ele])[[0,1]].rename(columns={0:'position',1:'player'})
-                team['player'] = team['player'].replace('Empty', np.nan)
-                self.rosters[tnum] = team
-                self.team_map[tnum] = t.text
-        else:
-            st = specific_team
-            t = teams[np.argmin(np.array([t.text for t in teams])  == st)]
+        for t in teams:
             t.click()
             tnum = int(t.get_property('value'))
             team_ele = self.driver.find_elements("xpath","/html/body/div[1]/div[1]/section/div/div[2]/main/div/div/div[3]/div[1]/div[1]/div[2]/div[2]/div/div/div/div/div[2]/table/tbody/tr")
             team = pd.DataFrame([r.text.splitlines() for r in team_ele])[[0,1]].rename(columns={0:'position',1:'player'})
             team['player'] = team['player'].replace('Empty', np.nan)
-            self.rosters[tnum] = team
+            self.rosters[t.text] = team
             self.team_map[tnum] = t.text
+            #{v: k for k, v in self.team_map.items()}
+            
+    # def update_rosters(self,specific_team=None):
+    #     """
+    #     This function scrapes the current team and rosters to keep track of 
+    #     who has drafted who.
+        
+    #     If you only want to update 1 team (like yours), use the optional arg.
+    #     "specific_team" which accepts an integer and correspond to the team's
+    #     index within self.teams.
+    #     """
+    #     teams = self.driver.find_elements("xpath", "/html/body/div[1]/div[1]/section/div/div[2]/main/div/div/div[3]/div[1]/div[1]/div[2]/div[1]/div/select/option")
+    #     if specific_team is None:
+    #         for t in teams:
+    #             t.click()
+    #             tnum = int(t.get_property('value'))
+    #             team_ele = self.driver.find_elements("xpath","/html/body/div[1]/div[1]/section/div/div[2]/main/div/div/div[3]/div[1]/div[1]/div[2]/div[2]/div/div/div/div/div[2]/table/tbody/tr")
+    #             team = pd.DataFrame([r.text.splitlines() for r in team_ele])[[0,1]].rename(columns={0:'position',1:'player'})
+    #             team['player'] = team['player'].replace('Empty', np.nan)
+    #             self.rosters[tnum] = team
+    #             self.team_map[tnum] = t.text
+    #     else:
+    #         st = specific_team
+    #         t = teams[np.argmin(np.array([t.text for t in teams])  == st)]
+    #         t.click()
+    #         tnum = int(t.get_property('value'))
+    #         team_ele = self.driver.find_elements("xpath","/html/body/div[1]/div[1]/section/div/div[2]/main/div/div/div[3]/div[1]/div[1]/div[2]/div[2]/div/div/div/div/div[2]/table/tbody/tr")
+    #         team = pd.DataFrame([r.text.splitlines() for r in team_ele])[[0,1]].rename(columns={0:'position',1:'player'})
+    #         team['player'] = team['player'].replace('Empty', np.nan)
+    #         self.rosters[tnum] = team
+    #         self.team_map[tnum] = t.text
+    #     pass
+    
+    def update_pick_history(self):
+        self.driver.find_element('xpath', '//*[@id="fitt-analytics"]/div/div[3]/div[3]/div/div[1]/div/div/label[3]').click()
+        data = self.driver.find_element('xpath', '//*[@id="fitt-analytics"]/div/div[3]/div[3]/div/div[2]/div/ul').text.splitlines()
+        
+        players = []
+        teams = []
+        for item in data:
+            match = re.match(r'^(.*?) / (\w{2,4}) (\w{1,3})', item)
+            if match:
+                name = match.group(1)
+                team_abbr = match.group(2).upper()
+                position = match.group(3)
+                players.append((name, team_abbr, position))
+                
+            match = re.match(r'^(.*?), (\w{2,}) - (.*)$', item)
+            if match:
+                draft_round = match.group(1).removeprefix('R')
+                pick = match.group(2).removeprefix('P')
+                team = match.group(3).upper()
+                teams.append((draft_round, pick, team))
+        
+        df = pd.DataFrame(zip(players, teams))
+        
+        # Unpack the DataFrame into 6 columns
+        unpacked_df = df.apply(lambda row: pd.Series(row[0] + row[1]), axis=1)
+
+        # Rename columns
+        unpacked_df.columns = ['Player', 'Team', 'Position', 'Round', 'Pick', 'Selecting Team']
+        
+        self.pick_history = pd.concat([self.pick_history, unpacked_df])
+
         pass
+
     
     def open_positions(self):
         """
@@ -138,28 +194,6 @@ class draft_monitor:
     
     def open_mask(self):
         return self.rosters[self.myteam]['player'].isna()
-    
-
-    def pick_history(self):
-        self.driver.find_element("xpath", '/html/body/div[1]/div[1]/section/div/div[2]/main/div/div/div[3]/div[2]/div[2]/div/nav/ul/li[2]/button').click()
-        pass
-
-    def avail_players(self):
-        self.driver.find_element("xpath", '/html/body/div[1]/div[1]/section/div/div[2]/main/div/div/div[3]/div[2]/div[2]/div/nav/ul/li[1]/button').click()
-        pass
-
-    def rpick_id(self,first_r, r, p):
-        return f"/html/body/div[1]/div[1]/section/div/div[2]/main/div/div/div[3]/div[2]/div/div/div/div[2]/div/div[2]/div{f'[{r}]' if first_r else ''}/div[2]/div/div[1]/div/div/div[3]/div[{p}]/div/div/div[2]/div/div[2]/div/div/div/div/div/div[1]/img[1]"
-    
-    def rpick_name(self,first_r, r, p):
-        return f"/html/body/div[1]/div[1]/section/div/div[2]/main/div/div/div[3]/div[2]/div/div/div/div[2]/div/div[2]/div{f'[{r}]' if first_r else ''}/div[2]/div/div[1]/div/div/div[3]/div[{p}]/div/div/div[2]/div/div[2]/div/div/div/div/div/div[2]/div[1]/span/span/a"
-
-    def do_pick_id(self,r, p):
-        return f"/html/body/div[1]/div[1]/section/div/div[2]/main/div/div/div[3]/div[2]/div/div/div/div[2]/div/div[2]/div[{r}]/div[2]/div/div[1]/div/div/div[3]/div[{p}]/div/div/div[2]/div/div[2]/div/div/div/div/div/div[1]/img[1]"
-    
-      
-    def do_pick_name(self,r, p):
-        return f"/html/body/div[1]/div[1]/section/div/div[2]/main/div/div/div[3]/div[2]/div/div/div/div[2]/div/div[2]/div[{r}]/div[2]/div/div[1]/div/div/div[3]/div[{p}]/div/div/div[2]/div/div[2]/div/div/div/div/div/div[2]/div[1]/span/span/a"
 
     def update(self):
         """
@@ -168,93 +202,29 @@ class draft_monitor:
         Collects the entire draft history on every call to prevent errors in the
         history.        
         """
-        self.get_current_pick(exception=1)
-        if self.current_pick <0:
-            self.avail_players()
-            self.pickids = []
-            return
-        else:
-            self.pick_history()
-        #     current_pick = 128
-            self.update_rosters(self.myteam)
-            self.open_positions()
-            cR = (self.current_pick-1) // self.teams + 1
-            cP = (self.current_pick-1) % self.teams + 1
-            picks_list = [(r,p) for r in range(1,cR) for p in range(1,self.teams+1)]
-            picks_list = picks_list + [(cR, p) for p in range(1, cP+1)]
-            pickids = [self.scrape_pick_ids(r,p) for r,p in picks_list]
-            1+1
-            self.avail_players()
-            self.pickids = pickids
-        pass
-
-    def scrape_pick_ids(self, r,p):
-        "scrapes draft picks by id that matches the 'espn_id' column"
-        pick = self.pick_()
-        first_round = pick > self.teams
-        if pick != self.teams * self.rounds:
-            string = self.rpick_id(first_round,r,p)
-            ns = self.rpick_name(first_round,r,p)
-        else:
-            string = self.do_pick_id(r,p)
-            ns = self.do_pick_name(r,p)
-
-        element = self.driver.find_element('xpath', string)
-        imgref = element.get_property('src')
-        beg = imgref.find('full') + 5
-        end = imgref.find('.png')
-
-        if beg == 4:
-            beg = imgref.find('nfl/500/') + 8
-            pid = imgref[beg:end]
-        else:
-            pid = int(imgref[beg:end])
-
-        ne = self.driver.find_element('xpath', ns)
-        name = ne.text
-        return r,p,pid,name
-
-    def get_current_pick(self, exception=None):
-        "scrapes the current pick number"
-        
-        if exception is None:
-            exception = self.teams * self.rounds
-            
-        try:
-            cpe = self.driver.find_element("xpath", '/html/body/div[1]/div[1]/section/div/div[2]/main/div/div/div[2]/div/div[2]/div/div[2]')
-            picktxt = cpe.text
-            beg = picktxt.find('PICK') + 5
-            self.current_pick = int(picktxt[beg:]) - 1 
-        except:
-            self.current_pick = exception
+        self.update_lineups()
+        self.current_pick = self.get_current_pick()
+        self.update_pick_history()
+        self.open_positions()
         pass
 
     
-    def process_update(self):
-        self.update()
-        dfpids = pd.DataFrame(self.pickids)
-        dfpids.columns = ['round','pick','espn_id','espn_name']
-        dfpids = dfpids.set_index('espn_id')
-        return dfpids
+    def get_current_pick(self, exception=None):
+        "calculate the current pick number"
+        pick = 1
+        for k,v in self.rosters.items():
+            pick += v['player'].count()
+        return pick
+
     
     def map_empty_positions(self,df):
         self.open_positions()
-        df['bench_mult'] = df['position'].map(oc_mult)
         df['needs'] = df['position'].map(self.empty_positions)
         df['needs'] = df['needs'].fillna(0)
         if self.need_flex:
             df['needs'] += np.where(df['position'].isin(flex_positions), 1, 0)
         
-        df['oc_adj'] = np.where(df['needs'] <= 0,
-                                df['bench_mult'],
-                                1)
         return df
     
-    
-    def filter_picks(self,df):
-        dfp = self.process_update()
-        df['picked'] = df['espn_id'].isin(dfp.index.astype(str))
-        df['round'] = df['espn_id'].map(dfp['round'])
-        df['rpick'] = df['espn_id'].map(dfp['pick'])
-        return df
+
 
