@@ -18,7 +18,7 @@ def get_next_pick_number(total_drafted, starting_pick, total_teams):
     return next_pick
 
 # dataset
-df = pd.read_csv(r'/Users/jaketolleson/Library/CloudStorage/OneDrive-Personal/Documents/Draft Kings/2023 draft.csv')
+df = pd.read_csv('2023draft.csv')
 df['ppg'] = df['points']/17
 df['ppg_ceiling'] = df['ceiling']/17
 df['ppg_floor'] = df['floor']/17
