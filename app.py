@@ -63,7 +63,7 @@ app_ui = ui.page_fluid(
                     ui.panel_main(
                         ui.row(
                             # Draft Board (Top Left)
-                            ui.column(12, ui.dataframe.output_data_frame("draft_board")),
+                            ui.column(12, ui.output_data_frame("draft_board")),
                             # ADP vs Points (Top Right)
                             ui.br()
                         ),
@@ -125,35 +125,24 @@ def server(input, output, session):
         # Extract selected player's data
         selected_row = input.draft_board_selected_rows()
         if selected_row:
-            selected_player = draft_board_data().iloc[selected_row[0]]
+            selected_player = draft_board_data().iloc[[selected_row[0]]]
 
             # Create a player_id for the selected player
             player_id = f"{selected_player['first_name']} {selected_player['last_name']}"
 
             # Update drafted players and roster
             drafted_players.set(pd.concat([drafted_players(), pd.DataFrame({'player_id': [player_id]})]))
-            roster.set(roster() + [player_id])
+
+            # Update roster
+            x = roster().copy()
+            x.append(player_id)
+            roster.set(x)
 
             # Update removed_player_data by excluding the removed player
-            removed_players_data.set(pd.concat([removed_players_data(), draft_board_data().iloc[selected_row]]))
+            removed_players_data.set(pd.concat([removed_players_data(), selected_player]))
 
             # Update draft_board_data by excluding the drafted player
-            draft_board_data.set(draft_board_data().drop(selected_row))
-
-    # Function to clear drafted players
-    @reactive.Effect
-    @reactive.event(input.remove_player)
-    def clear_drafted_players():
-        # Extract selected player's data
-        selected_row = input.draft_board_selected_rows()
-        if selected_row:
-            selected_player = draft_board_data().iloc[selected_row[0]]
-
-            # Update removed_player_data by adding the removed player
-            removed_players_data.set(pd.concat([removed_players_data(), draft_board_data().iloc[selected_row]]))
-
-            # Update draft_board_data by excluding the drafted player
-            draft_board_data.set(draft_board_data().drop(selected_row))
+            draft_board_data.set(draft_board_data().drop(selected_player.index))
 
     # Function to add players back to draft board
     @reactive.Effect
@@ -185,12 +174,13 @@ def server(input, output, session):
         removed_players_data.set(df.head(0))
 
     @output
-    @render.data_frame()
+    @render.data_frame
     def draft_board():
-        return render.DataTable(filtered_data().assign(adp=lambda x: np.round(x['adp']))[[
+        data = filtered_data().assign(adp=lambda x: np.round(x['adp']))[[
             'name', 'team', 'position', 'rank', 'ppg', 'pos_rank', 'tier', 'adp', 'prob_of_avail_next', 'prob_of_avail_two_away'
-        ]],row_selection_mode='multiple')
-    
+        ]]
+        return render.DataGrid(data,row_selection_mode='single')
+
     # Plot Ceiling vs Floor
     @output
     @render_widget()
