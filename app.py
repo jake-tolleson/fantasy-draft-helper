@@ -7,6 +7,8 @@ from scipy.stats import norm
 import plotly.express as px
 import uvicorn
 from shinywidgets import *
+import espn_live_draft as eld
+import shinyswatch
 
 # Helper function
 def get_next_pick_number(total_drafted, starting_pick, total_teams):
@@ -18,7 +20,7 @@ def get_next_pick_number(total_drafted, starting_pick, total_teams):
     return next_pick
 
 # dataset
-df = pd.read_csv('2023draft.csv')
+df = pd.read_csv(r'/Users/jaketolleson/Library/CloudStorage/OneDrive-Personal/Documents/Draft Kings/2023 draft.csv')
 df['ppg'] = df['points']/17
 df['ppg_ceiling'] = df['ceiling']/17
 df['ppg_floor'] = df['floor']/17
@@ -34,36 +36,36 @@ drafted_player_columns = list(df.columns)
 empty_drafted_players = pd.DataFrame(columns=drafted_player_columns)
 
 app_ui = ui.page_fluid(
+    shinyswatch.theme.zephyr(),
     ui.h2("Fantasy Draft Board",
-        ui.navset_pill(
+        ui.page_navbar(
             ui.nav("Draft Board",
                 ui.layout_sidebar(
                     ui.panel_sidebar(
-                        ui.output_text_verbatim('next_pick_number'),
+                        ui.h6(ui.output_text_verbatim('next_pick_number')),
                         # Add inputs for filtering or any other controls you need
                         ui.input_select(id="position_filter", 
-                                        label="Filter by Position:",
+                                        label=ui.h6("Filter by Position:"),
                                         choices=["All", 'QB', 'RB', 'WR', 'TE', 'K', 'DST'],
                                         selected="All",
                                         multiple=True),
-                        ui.input_numeric('draft_position', 'Draft Position', value=1, min=1, max=12),
-                        ui.input_numeric('total_teams', 'Total Teams', value=12, min=4, max=12),
+                        ui.input_numeric('draft_position', ui.h6('Draft Position'), value=1, min=1, max=12),
+                        ui.input_numeric('total_teams', ui.h6('Total Teams'), value=12, min=4, max=12),
                         ui.br(),
-                        ui.input_action_button("draft_button", "Draft Player", width='100%'),
+                        ui.input_action_button("draft_button", ui.h6("Draft Player"), width='100%'),
                         ui.br(),
+                        ui.input_action_button('remove_player', ui.h6("Remove Player"), width='100%'),
                         ui.br(),
-                        ui.input_action_button('remove_player', "Remove Player", width='100%'),
+                        ui.input_action_button('add_player_in', ui.h6("Add Player Back In"), width='100%'),
                         ui.br(),
-                        ui.br(),
-                        ui.input_action_button('add_player_in', "Add Player Back In", width='100%'),
-                        ui.br(),
+                        ui.input_action_button("start_draft_button", "Set Up Draft", width='100%'),
                         ui.br(),
                         ui.input_action_button("clear_drafts", "Reset Draft", width='100%')
                     ),
                     ui.panel_main(
                         ui.row(
                             # Draft Board (Top Left)
-                            ui.column(12, ui.output_data_frame("draft_board")),
+                            ui.column(12, ui.h6(ui.output_data_frame("draft_board"))),
                             # ADP vs Points (Top Right)
                             ui.br()
                         ),
@@ -89,6 +91,7 @@ def server(input, output, session):
     removed_players_data = reactive.Value(df.copy().head(0))
     roster = reactive.Value([])
     draft_board_data = reactive.Value(df.copy().sort_values(by='rank'))
+    draft = reactive.Value(True)
 
     # Reactive value to store filtered data based on position filter
     @reactive.Calc()
@@ -186,13 +189,19 @@ def server(input, output, session):
     @render_widget()
     def ceiling_floor_plot():
         color_discrete_map = {'QB':'#F8766D', 'RB': '#7CAE00', "WR": "#00B0F6", "TE": "#FF61CC",  "K": '#00BFC4', "DST": "#CD9600"}
-        data = filtered_data().sort_values(by='rank').head(12)
+        data = filtered_data().sort_values(by='rank').head(12).reset_index(drop=True)
         data['position'] = data['position'].cat.remove_unused_categories()
-        fig = px.line(data, x='ppg_ceiling', y='name', color='position',
-                         text=data.apply(lambda x: f"Name: {x['name']}<br>Avg PPG: {round(x['ppg'], 2)}<br>SD PPG: {round(x['sd_pts']/17, 2)}", axis=1),
+        fig = px.scatter(data, x='ppg_ceiling', y='name', color='position',
                          color_discrete_map=color_discrete_map)
-        fig.update_traces(marker=dict(symbol='square'))
+        hovertext = data.apply(lambda x: f"Name: {x['name']}<br>Avg PPG: {round(x['ppg'], 2)}<br>SD PPG: {round(x['sd_pts']/17, 2)}", axis=1)
+        fig.update_traces(marker=dict(symbol='square'), hoverinfo='text', text=hovertext)
         fig.update_layout(title='Ceiling vs Floor', xaxis_title='PPG', yaxis_title='Name')
+        # Add segment lines
+        for i in range(len(data)):
+            fig.add_shape(type='line',
+                        x0=data['ppg_ceiling'][i], y0=data['name'][i],
+                        x1=data['ppg_floor'][i], y1=data['name'][i],
+                        line=dict(color='black', width=1))
         return fig
 
     # Plot Tier plot
@@ -214,6 +223,14 @@ def server(input, output, session):
         fig.update_layout(title="PPG vs ADP", xaxis_title="Average Draft Position (ADP)", yaxis_title="Projected Points")
         return fig
 
+    #Initiate draft instance
+    @reactive.Effect()
+    @reactive.event(input.start_draft_button)
+    async def espn():
+        if 'driver' in dir(draft()):
+            return None
+        draft.set(eld.ds.draft_monitor('Team TOLLESON', driver='edge'))
+        
     # @output
     # @render.html
     # def roster():
