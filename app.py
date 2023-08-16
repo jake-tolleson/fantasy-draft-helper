@@ -60,7 +60,8 @@ app_ui = ui.page_fluid(
                         ui.br(),
                         ui.input_action_button("start_draft_button", "Set Up Draft", width='100%'),
                         ui.br(),
-                        ui.input_action_button("clear_drafts", "Reset Draft", width='100%')
+                        ui.input_action_button("clear_drafts", "Reset Draft", width='100%'),
+                        width=2
                     ),
                     ui.panel_main(
                         ui.row(
@@ -71,10 +72,11 @@ app_ui = ui.page_fluid(
                         ),
                         ui.row(
                             # Additional Plot 1 (Bottom Left)
-                            ui.column(6, output_widget("ceiling_floor_plot")),
+                            ui.column(6, output_widget("ceiling_floor_plot", height='100%', width='100%')),
                             # Additional Plot 2 (Bottom Right)
-                            ui.column(6, output_widget("adp_points_plot"))
-                        )
+                            ui.column(6, output_widget("adp_points_plot", height='100%', width='100%'))
+                        ),
+                        width=10
                     )
                 )
             )
@@ -191,17 +193,28 @@ def server(input, output, session):
         color_discrete_map = {'QB':'#F8766D', 'RB': '#7CAE00', "WR": "#00B0F6", "TE": "#FF61CC",  "K": '#00BFC4', "DST": "#CD9600"}
         data = filtered_data().sort_values(by='rank').head(12).reset_index(drop=True)
         data['position'] = data['position'].cat.remove_unused_categories()
-        fig = px.scatter(data, x='ppg_ceiling', y='name', color='position',
-                         color_discrete_map=color_discrete_map)
-        hovertext = data.apply(lambda x: f"Name: {x['name']}<br>Avg PPG: {round(x['ppg'], 2)}<br>SD PPG: {round(x['sd_pts']/17, 2)}", axis=1)
-        fig.update_traces(marker=dict(symbol='square'), hoverinfo='text', text=hovertext)
+        fig = px.scatter(data, x='ppg', y='name', color='position',
+                         color_discrete_map=color_discrete_map,
+                         hover_name="name",
+                          hover_data={'points':False, 
+                             'position':True, 
+                             'name': False,
+                             'ppg':':.2f',
+                             'ceiling':':.2f',
+                             'floor':':.2f'
+                            })
+        fig.update_traces(marker=dict(symbol='diamond', size=10))
         fig.update_layout(title='Ceiling vs Floor', xaxis_title='PPG', yaxis_title='Name')
         # Add segment lines
         for i in range(len(data)):
             fig.add_shape(type='line',
                         x0=data['ppg_ceiling'][i], y0=data['name'][i],
                         x1=data['ppg_floor'][i], y1=data['name'][i],
-                        line=dict(color='black', width=1))
+                        line=dict(color='black', width=2))
+        ordered_names = data.name.tolist()
+        ordered_names.reverse()
+        fig.update_yaxes(categoryorder='array', categoryarray= ordered_names)
+        fig.layout.height = 600
         return fig
 
     # Plot Tier plot
@@ -217,10 +230,19 @@ def server(input, output, session):
     @output
     @render_widget()
     def adp_points_plot():
+        color_discrete_map = {'QB':'#F8766D', 'RB': '#7CAE00', "WR": "#00B0F6", "TE": "#FF61CC",  "K": '#00BFC4', "DST": "#CD9600"}
         data = filtered_data()
         fig = px.scatter(data, x='adp', y='points', color='position',
-                         text=data.apply(lambda x: f"Name: {x['name']}<br>Points: {round(x['points'])}<br>ADP: {round(x['adp'])}", axis=1))
+                         color_discrete_map=color_discrete_map,
+                         hover_name="name",
+                          hover_data={'points':False, 
+                             'position':False, 
+                             'adp':':.0f',
+                             'ppg':':.2f',
+                            }
+                          )
         fig.update_layout(title="PPG vs ADP", xaxis_title="Average Draft Position (ADP)", yaxis_title="Projected Points")
+        fig.layout.height = 600
         return fig
 
     #Initiate draft instance
