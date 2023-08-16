@@ -210,11 +210,12 @@ def server(input, output, session):
             fig.add_shape(type='line',
                         x0=data['ppg_ceiling'][i], y0=data['name'][i],
                         x1=data['ppg_floor'][i], y1=data['name'][i],
-                        line=dict(color='black', width=2))
+                        line=dict(color=color_discrete_map[data['position'][i]], width=2))
         ordered_names = data.name.tolist()
         ordered_names.reverse()
         fig.update_yaxes(categoryorder='array', categoryarray= ordered_names)
         fig.layout.height = 600
+        fig.layout.width = 600
         return fig
 
     # Plot Tier plot
@@ -243,6 +244,7 @@ def server(input, output, session):
                           )
         fig.update_layout(title="PPG vs ADP", xaxis_title="Average Draft Position (ADP)", yaxis_title="Projected Points")
         fig.layout.height = 600
+        fig.layout.width = 600
         return fig
 
     #Initiate draft instance
