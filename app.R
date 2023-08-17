@@ -13,6 +13,7 @@ library(dplyr)
 library(ggplot2)
 library(plotly)
 library(bslib)
+library(reticulate)
 
 # Helper function
 get_next_pick_number <- function(total_drafted, starting_pick, total_teams){
@@ -25,6 +26,8 @@ get_next_pick_number <- function(total_drafted, starting_pick, total_teams){
   
   return(next_pick)
 }
+
+eld <- import("espn_live_draft")
 
 
 # dataset
@@ -68,7 +71,11 @@ ui <- fluidPage(theme = bs_theme(bootswatch = "zephyr"),
                                         actionButton('add_player_in', "Add Player Back In", width='100%'),
                                         br(),
                                         br(),
-                                        actionButton("clear_drafts", "Reset Draft", width='100%')
+                                        actionButton("clear_drafts", "Reset Draft", width='100%'),
+                                        h5('Live Draft Controls'),
+                                        actionButton("start_live_draft", "Start ESPN Draft", width='100%'),
+                                        actionButton("configure_draft", "Configure Draft", width='100%'),
+                                        actionButton("update_draft", "Update Draft", width='100%')
                                         ,width=2),
                                       mainPanel(
                                         fluidRow(
@@ -92,12 +99,14 @@ ui <- fluidPage(theme = bs_theme(bootswatch = "zephyr"),
 # Define the server
 server <- function(input, output, session) {
   # Create reactive values to store drafted players and roster
-  drafted_players <- reactiveVal(data.frame(player_id = character(0)))
+  #drafted_players <- reactiveVal(data.frame(player_id = character(0)))
   removed_players_data <- reactiveVal(df %>% slice_head(n=0))
-  roster <- reactiveVal(character(0))
+  roster <- reactiveVal(TRUE)
   draft_board_data <- reactiveVal(df %>% arrange(rank))
   draft_position <- reactive(input$draft_position)
   total_teams <- reactive(input$total_teams)
+  draft <- reactiveVal(TRUE)
+  drafted_players <- reactiveVal(TRUE)
   
   
   # Reactive value to store filtered data based on position filter
@@ -112,13 +121,13 @@ server <- function(input, output, session) {
   })
   
   next_pick_number <- reactive({
-    picks_made <- length(roster())
+    picks_made <- nrow(roster())
     next_pick <- get_next_pick_number(picks_made, draft_position(), total_teams())
     return(next_pick)
   })
   
   two_picks_away <- reactive({
-    picks_made <- length(roster()) + 1
+    picks_made <- nrow(roster()) + 1
     next_pick <- get_next_pick_number(picks_made, draft_position(), total_teams())
     return(next_pick)
   })
@@ -269,13 +278,52 @@ server <- function(input, output, session) {
     ggplotly(p, tooltip = c('text'))
   })
   
-
-
+# Start ESPN Live Draft
+  observeEvent(input$start_live_draft, {
+    if(py_has_attr(draft, 'driver')){
+      return(NULL)
+    }
+    draft(eld$ds$draft_monitor('Team TOLLESON', 'edge'))
+  })
+  
+  # Configure ESPN Live Draft
+  observeEvent(input$configure_draft, {
+    if(!py_has_attr(draft, 'driver')){
+      return(NULL)
+    }
+    draft()$configure_draft()
+  })
+  
+  # Update ESPN Live Draft
+  observeEvent(input$update_draft, {
+    if(!py_has_attr(draft, 'driver') | length(draft$rosters) == 0){
+      return(NULL)
+    }
+    draft()$update()
+    
+    drafted_players(
+      draft$pick_history %>% 
+      as_tibble() %>%
+      mutate(Player=trimws(gsub('D/ST', '',Player))) %>%
+      mutate(Player=trimws(gsub('DJ', 'D.J.',Player))) %>%
+      mutate(Player=trimws(gsub('Etienne Jr.', 'Etienne',Player)))
+    )
+    
+    draft_board(
+      df %>% 
+      anti_join(drafted_players,by=join_by(name == Player)) %>%
+      arrange(rank)
+    )
+    
+    roster(draft()$rosters[[draft()$myteam]])
+  })
+  
   # Generate the roster HTML based on drafted players
   output$roster <- renderUI({
     if (length(roster()) > 0) {
-      my_team <- df %>% filter(paste(first_name, last_name) %in% roster()) %>%
-        mutate(name=paste(first_name, last_name)) %>% select(name, position)
+      my_team <- roster() %>%
+        mutate(name=player) %>% 
+        select(name, position)
       
       roster_html <- paste0(
         "<h2>My Roster</h2>",
