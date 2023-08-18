@@ -1,5 +1,7 @@
 # Define the server
 server <- function(input, output, session) {
+  ns <- session$ns
+  
   # Create reactive values to store drafted players and roster
   #drafted_players <- reactiveVal(data.frame(player_id = character(0)))
   roster <- reactiveVal(TRUE)

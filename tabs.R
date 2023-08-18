@@ -1,4 +1,7 @@
-draft_board_tab <- tabPanel("Draft Board",
+
+draft_board_tab <- function(id) {
+  ns <- NS(id, "draft_board")
+                            tabPanel("Draft Board",
                             sidebarLayout(
                               sidebarPanel(
                                 verbatimTextOutput('next_pick_number'),
@@ -34,10 +37,13 @@ draft_board_tab <- tabPanel("Draft Board",
                                   column(width = 6, plotlyOutput("adp_points_plot"))                  # Additional Plot 2 (Bottom Right)
                                 ), width = 10))
 )
-
-roster_tab <- tabPanel("Roster",
+}
+roster_tab <- function(id){
+  ns <- NS(id, "roster")
+                tabPanel("Roster",
                  fluidRow(
                    column(uiOutput("roster"), width=6),
                    column(dataTableOutput("removed_players"), width=6)
                  )
 )
+}

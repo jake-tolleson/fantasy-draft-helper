@@ -1,10 +1,10 @@
 source('tabs.R')
 
-my_ui <- shinyUI({
+ui <- shinyUI({
   fluidPage(
     tabsetPanel(
-      draft_board_tab,
-      roster_tab
+      draft_board_tab(),
+      roster_tab()
     )
   )
 })

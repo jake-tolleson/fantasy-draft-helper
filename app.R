@@ -1,7 +1,3 @@
-source('ui.R', local = TRUE)
-source('server.R')
-
-library(shiny)
 library(shiny)
 library(DT)
 library(dplyr)
@@ -9,6 +5,10 @@ library(ggplot2)
 library(plotly)
 library(bslib)
 library(reticulate)
+options(shiny.autoreload = TRUE) 
+
+source('ui.R')
+source('server.R')
 
 # Helper function
 get_next_pick_number <- function(total_drafted, starting_pick, total_teams){
@@ -44,6 +44,6 @@ empty_drafted_players <- data.frame(matrix(ncol = length(drafted_player_columns)
 colnames(empty_drafted_players) <- drafted_player_columns
 
 shinyApp(
-  ui = my_ui,
-  server = my_server
+  ui = ui,
+  server = server
 )
