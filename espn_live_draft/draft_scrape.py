@@ -88,6 +88,8 @@ class draft_monitor:
             
         self.update_lineups()
         self.teams = len(self.team_map)
+        if self.team_name not in list(self.team_map.values()):
+            self.team_name = list(self.team_map.values())[0]
         self.myteam = list(self.team_map.keys())[list(self.team_map.values()).index(self.team_name)]
         self.mypick = list(self.team_map.values()).index(self.team_name) + 1
         self.open_positions()
@@ -148,7 +150,11 @@ class draft_monitor:
     #     pass
     
     def update_pick_history(self):
-        self.driver.find_element('xpath', '//*[@id="fitt-analytics"]/div/div[3]/div[3]/div/div[1]/div/div/label[3]').click()
+        try:
+            self.driver.find_element('xpath', '//*[@id="fitt-analytics"]/div/div[3]/div[3]/div/div[1]/div/div/label[3]').click()
+        except Exception as e:
+            pass
+        
         data = self.driver.find_element('xpath', '//*[@id="fitt-analytics"]/div/div[3]/div[3]/div/div[2]/div/ul').text.splitlines()
         
         players = []
