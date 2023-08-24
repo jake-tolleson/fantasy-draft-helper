@@ -2,6 +2,7 @@
 library(shiny)
 library(DT)
 library(dplyr)
+library(tidyr)
 library(ggplot2)
 library(plotly)
 library(bslib)
@@ -10,7 +11,7 @@ library(shinydashboard)
 library(fresh)
 library(nflreadr)
 library(lubridate)
-options(shiny.autoreload = TRUE) 
+options(shiny.autoreload = TRUE)
 
 
 # Helper function
@@ -21,7 +22,7 @@ get_next_pick_number <- function(total_drafted, starting_pick, total_teams){
   } else {
     next_pick <- (current_round-1)*total_teams+starting_pick
   }
-  
+
   return(next_pick)
 }
 
@@ -44,8 +45,8 @@ week_inputs[1] <- 'Season'
 
 eld <- import("espn_live_draft")
 
-df <- readRDS('2023draft.rds')
-df <- df |> 
+df <- readRDS('/Users/johnathan/Desktop/Misc/average_projections.rds')
+df <- df |>
   mutate(ppg = points/17) |>
   mutate(ppg_ceiling = ceiling/17) |>
   mutate(ppg_floor = floor/17) |>
@@ -76,14 +77,14 @@ sidebar <- dashboardSidebar(
     hr(),
     menuItem("My Account", tabName = "my_account", icon = icon("user"))
   )
-  
+
 )
 
 body <- dashboardBody(
   tags$head(tags$style(HTML('
-                            
+
          .content-wrapper { overflow: auto; }
-         
+
         /* logo */
         .skin-blue .main-header .logo {
                               font-family: use_googlefont("Nunito"), Times, "Times New Roman", serif;
@@ -100,7 +101,7 @@ body <- dashboardBody(
         /* navbar (rest of the header) */
         .skin-blue .main-header .navbar {
                               background-color: #f8f8f8;
-                              }        
+                              }
 
         /* main sidebar */
         .skin-blue .main-sidebar {
@@ -116,7 +117,7 @@ body <- dashboardBody(
                               margin-left: 7px;
                               margin-right: 7px;
         }
-        
+
          /* active selected tab in the sidebarmenu hovered*/
         .skin-blue .main-sidebar .sidebar .sidebar-menu .active a:hover{
                               background-color: #3D9970;
@@ -138,17 +139,17 @@ body <- dashboardBody(
          .skin-blue .main-sidebar .sidebar .sidebar-menu a:hover{
                               color: #3D9970
                               }
-        /* toggle button when hovered  */                    
+        /* toggle button when hovered  */
          .skin-blue .main-header .navbar .sidebar-toggle:hover{
                               background-color: #ead1dc;
          }
-        
-        /* toggle button */                    
+
+        /* toggle button */
          .skin-blue .main-header .navbar .sidebar-toggle{
                               background-color: #f8f8f8;
                               color: #ead1dc;
                               '))),
-  
+
   tabItems(
     tabItem(tabName = "settings"
             ,h2("Settings tab content")
@@ -189,7 +190,7 @@ body <- dashboardBody(
                     ,column(numericInput('dst_baseline', h5('DST', style = "font-size:15px;"), 3, min=0), width=4)
                   )
                   ,title='Draft Settings', collapsible = T, solidHeader = T, width=4, collapsed=T)
-              
+
               ,box(fluidRow(
                 column(numericInput('qb_cohen', h5('QB', style = "font-size:15px;"), 13, min=0), width=4)
                 ,column(numericInput('rb_cohen', h5('RB', style = "font-size:15px;"), 35, min=0), width=4)
@@ -201,7 +202,7 @@ body <- dashboardBody(
                 ,column(numericInput('dst_cohen', h5('DST', style = "font-size:15px;"), 3, min=0), width=4)
               )
               ,title="Cohen's D Values", collapsible = T, solidHeader = T, width=4, collapsed=T)
-              
+
               ,box(numericInput('salary_cap', h5('Salary Cap', style = "font-size:15px;"), 50000, min=0)
                    ,selectInput('dfs_source', h5('DFS Source', style = "font-size:15px;"), choices=c("Draft Kings"), selected="Draft Kings")
                    ,selectInput('dfs_optimizer', h5('Optimizer', style = "font-size:15px;"), choices=c("Points", "Ceiling", "Floor"), selected="Points")
@@ -284,20 +285,20 @@ body <- dashboardBody(
               ),title="Scoring Settings", collapsible = T, solidHeader = T, width=8, collapsed = T)
             )
     ),
-    
+
     tabItem(tabName = "projections",
             h2("Projections tab content")
-            
+
     ),
-    
+
     tabItem(tabName = "lineup_optimizer",
             h2("Lineup tab content")
     ),
-    
+
     tabItem(tabName = "draft_optimizer",
             h2("Draft tab content")
     ),
-    
+
     tabItem(tabName = "live_draft"
            ,box(fluidRow(column(4, selectizeInput('draft_browser_type', 'Browser Type', c('Edge', 'Firefox', 'Chrome'), 'Edge')))
                ,fluidRow(column(4, actionButton('launch_browser', "Launch Browser", icon('play'))))
@@ -318,7 +319,7 @@ body <- dashboardBody(
                ,fluidRow(column(12, plotlyOutput("ld_points_v_adp", height='500px')))
                 ,title="Points vs ADP", collapsible = F, solidHeader = T, width=6, collapsed=F)
     ),
-    
+
     tabItem(tabName = "my_acount",
             h2("Account tab content")
     )
@@ -344,12 +345,12 @@ ui <- dashboardPage(
 
 # Define the server
 server <- function(input, output, session) {
- 
-  
+
+
   ##################
   ### Live Draft ###
   ##################
-  
+
   # set variables
   draft <- reactiveVal(py_none())
   roster <- reactiveVal(tibble())
@@ -359,48 +360,48 @@ server <- function(input, output, session) {
   drafted_players <- reactiveVal(tibble())
   my_picks <- reactiveVal(c())
 
-  
+
   # Reactive value to store filtered data based on position filter
   filtered_draft_board <- reactive({
-    
+
     data <- draft_board_data() |>
       mutate(prob_of_avail_next = round(1 - pnorm(next_pick_number(), mean = adp, sd = adp_sd),2)) |>
       mutate(prob_of_avail_two_away = round(1 - pnorm(two_picks_away(), mean = adp, sd = adp_sd),2))
-    
+
     if (!input$ld_position_filter %in%  c("All", "Flex")) {
       data <- data[data$position == input$ld_position_filter, ]
     }
-    
+
     if (input$ld_position_filter == "Flex"){
       data <- data[data$position %in% c("RB", "WR", "TE"), ]
-      
+
     }
-    
+
     data
   })
-  
+
   filtered_live_data <- reactive({
     data <- df |>
               filter(rank <= 210)
-    
+
     if (!input$ld_position_filter %in%  c("All", "Flex")) {
       data <- data[data$position == input$ld_position_filter, ]
     }
-    
+
     if (input$ld_position_filter == "Flex"){
       data <- data[data$position %in% c("RB", "WR", "TE"), ]
-      
+
     }
-    
+
     data
   })
-  
+
   next_pick_number <- reactive({
-    picks_made <- roster() |> drop_na() |> nrow() 
+    picks_made <- roster() |> drop_na() |> nrow()
     next_pick <- get_next_pick_number(picks_made, draft_position(), total_teams())
     return(next_pick)
   })
-  
+
   two_picks_away <- reactive({
     picks_made <- roster() |> drop_na() |> nrow() + 1
     next_pick <- get_next_pick_number(picks_made, draft_position(), total_teams())
@@ -412,7 +413,7 @@ server <- function(input, output, session) {
     next_pick <- get_next_pick_number(picks_made, draft_position(), total_teams())
     return(next_pick)
   })
-  
+
   # Start ESPN Live Draft
   observeEvent(input$launch_browser, {
     if(py_has_attr(draft(), 'driver')){
@@ -420,18 +421,18 @@ server <- function(input, output, session) {
     }
     draft(eld$ds$draft_monitor(input$my_fantasy_team, input$draft_browser_type))
   })
-  
+
   # Configure ESPN Live Draft
   observeEvent(input$configure_draft_button, {
     if(!py_has_attr(draft(), 'driver')){
       return(NULL)
     }
     draft()$configure_draft()
-    
+
     draft_position(draft()$mypick)
     total_teams(draft()$teams)
     my_picks(which(draft()$pick_order == draft()$myteam))
-    
+
     if(input$my_fantasy_team == 'Placeholder'){
     updateSelectInput(
       session = session,
@@ -440,60 +441,60 @@ server <- function(input, output, session) {
       choices = draft()$team_map |> unlist() |> unname()
     )
     }
-    
+
   })
-  
+
   observe({
     tryCatch({
     draft()$team_name <- input$my_fantasy_team
     draft()$configure_draft()
     }, error= function(e) print(paste('Live Draft team name cannot be set', e$message)))
   })
-    
-  
+
+
   # Update ESPN Live Draft
   observeEvent(input$update_draft_button, {
     if(!py_has_attr(draft(), 'driver') || length(draft()$rosters) == 0){
       return(NULL)
     }
-    
+
     tryCatch({
     draft()$update()
     }, error= function(e) print(paste('Error in draft update', e$message)))
-    
+
     tryCatch({
       drafted_players(
         draft()$pick_history |>
           as_tibble() |>
           mutate(Player=trimws(gsub('D/ST', '', Player))) |>
-          mutate(Player=clean_player_names(Player)) 
+          mutate(Player=clean_player_names(Player))
       )
     }, error= function(e) print(paste('Error in update drafted_players', e$message)))
-    
+
     tryCatch({
       draft_board_data(
         df |>
           anti_join(drafted_players(), by=join_by(name == Player)) |>
           arrange(rank)
       ) }, error= function(e) print(paste('Error in update drafted_board_data', e$message)))
-    
+
     tryCatch({
       roster(draft()$rosters[[draft()$myteam]])
     }, error= function(e) print(paste('Error in update roster', e$message)))
   })
-  
+
   output$draft_board <- DT::renderDataTable({
-    filtered_draft_board() |> 
+    filtered_draft_board() |>
       mutate(adp=round(adp)) |>
-      select(name,team,position,rank,ppg,pos_rank,tier,adp,uncertainty, prob_of_avail_next, prob_of_avail_two_away) |>
+      select(name, team, position, rank, ppg, ppg_vor, pos_rank, tier, adp, uncertainty, prob_of_avail_next, prob_of_avail_two_away) |>
       datatable(options = list(scrollX = TRUE, scrollY = '400px')) |>
       formatPercentage(columns=c('uncertainty', 'prob_of_avail_next', 'prob_of_avail_two_away'))
   })
-  
-  
+
+
   # Plot Ceiling vs Floor
   output$ld_ceiling_floor_plot <- renderPlotly({
-    
+
     p <- filtered_draft_board() |> arrange(rank) |>
       slice_head(n=12) |>
       mutate(x=case_when(input$ld_ceiling_floor_x_axis=='Points'~points
@@ -521,27 +522,27 @@ server <- function(input, output, session) {
       geom_point(aes(x=x), shape=23, size=3, fill=24) +
       geom_segment(aes(xend = x_floor, yend = name), linewidth = 1) +
       scale_fill_discrete(breaks = c('QB', 'RB', 'WR', 'TE', 'K', 'DST')) +
-      scale_colour_manual(values=c("QB"="#F8766D", "RB"="#7CAE00", "WR"="#00B0F6", "TE"="#FF61CC",  "K"='#00BFC4', "DST"="#CD9600"), 
+      scale_colour_manual(values=c("QB"="#F8766D", "RB"="#7CAE00", "WR"="#00B0F6", "TE"="#FF61CC",  "K"='#00BFC4', "DST"="#CD9600"),
                           labels=c("QB", "RB", "WR", "TE", "K", "DST")) +
       labs(title = '', x = input$ld_ceiling_floor_x_axis, y = 'Name') +
       theme(plot.title = element_text(hjust = 0.5),
             legend.position = "none")
-    
+
     ggplotly(p, tooltip = c('text'))
   })
-  
+
   # Points vs ADP
   output$ld_points_v_adp <- renderPlotly({
-    
-  p <- filtered_live_data() |> 
+
+  p <- filtered_live_data() |>
              filter(adp <= 200) |>
              mutate(y=case_when(input$ld_points_v_adp_y_axis=='Points'~points
                                ,input$ld_points_v_adp_y_axis=='PPG'~ppg
                                ,input$ld_points_v_adp_y_axis=='Points VOR'~points_vor
                                ,input$ld_points_v_adp_y_axis=='PPG VOR'~ppg_vor
                                ,TRUE~points)) |>
-             ggplot(aes(x=sqrt(adp), y=y^0.5, label=name, label2=y, label3=adp)) + 
-             geom_point(data=filtered_live_data() |> 
+             ggplot(aes(x=sqrt(adp), y=y^0.5, label=name, label2=y, label3=adp)) +
+             geom_point(data=filtered_live_data() |>
                           filter(name %in% draft_board_data()$name) |>
                           mutate(y=case_when(input$ld_points_v_adp_y_axis=='Points'~points
                                              ,input$ld_points_v_adp_y_axis=='PPG'~ppg
@@ -554,7 +555,7 @@ server <- function(input, output, session) {
                                 labels = trans_format(function(x)x^2, "sqrt")) +
              scale_x_continuous(breaks= sqrt(c(5,10,15,25,35,45,55,70,85,100,125,150,175,200)),
                                 labels = as.character(c(5,10,15,25,35,45,55,70,85,100,125,150,175,200)))
-  
+
   p <- ggplotly(p, tooltip = c("label", "label2", "label3"))
   p$x$data[[1]]$text <- gsub('/>y:', paste0('/>', input$ld_points_v_adp_y_axis, ':'), p$x$data[[1]]$text)
   p$x$data[[3]]$text <- paste(round(p$x$data[[3]]$x^2,0), ',', round(p$x$data[[3]]$y^2,0))
@@ -562,7 +563,7 @@ server <- function(input, output, session) {
 
   p
   })
-  
+
 }
 
 

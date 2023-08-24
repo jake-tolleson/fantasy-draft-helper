@@ -1,0 +1,85 @@
+1692915164876	geckodriver	INFO	Listening on 127.0.0.1:59534
+1692915165119	mozrunner::runner	INFO	Running command: MOZ_CRASHREPORTER="1" MOZ_CRASHREPORTER_NO_REPORT="1" MOZ_CRASHREPORTER_SHUTDOWN="1" MOZ_NO_REMOTE="1" "/App ... s" "localhost" "-foreground" "-no-remote" "-profile" "/var/folders/89/vzhz4b8951v8lxm32vg1p3xh0000gn/T/rust_mozprofile2KPls4"
+console.warn: services.settings: Ignoring preference override of remote settings server
+console.warn: services.settings: Allow by setting MOZ_REMOTE_SETTINGS_DEVTOOLS=1 in the environment
+1692915165843	Marionette	INFO	Marionette enabled
+console.error: "Warning: unrecognized command line flag" "-remote-allow-hosts"
+1692915166431	Marionette	INFO	Listening on port 59547
+WebDriver BiDi listening on ws://127.0.0.1:59535
+Read port: 59547
+1692915166878	RemoteAgent	WARN	TLS certificate errors will be ignored for this session
+DevTools listening on ws://127.0.0.1:59535/devtools/browser/1b80908a-1be8-42e5-a445-1b467e10fda2
+JavaScript warning: https://a.espncdn.com/prod/scripts/analytics/ESPN_at_v2.rs.min.js, line 1: WEBGL_debug_renderer_info is deprecated in Firefox and will be removed. Please use RENDERER.
+JavaScript warning: https://a.espncdn.com/prod/scripts/moat/yield.js, line 307: WEBGL_debug_renderer_info is deprecated in Firefox and will be removed. Please use RENDERER.
+JavaScript warning: https://pagead2.googlesyndication.com/bg/0w4HeoaYEDyr3MppZwiwXJgG2WIOQk_JViOVQEuG4uU.js line 2 > eval line 13 > eval line 1 > eval line 1 > eval, line 1: WEBGL_debug_renderer_info is deprecated in Firefox and will be removed. Please use RENDERER.
+console.warn: services.settings: Ignoring preference override of remote settings server
+console.warn: services.settings: Allow by setting MOZ_REMOTE_SETTINGS_DEVTOOLS=1 in the environment
+console.error: (new TypeError("lazy.AsyncShutdown.profileBeforeChange is undefined", "resource://services-settings/Database.sys.mjs", 597))
+console.warn: LoginRecipes: "Falling back to a synchronous message for: https://cdn.registerdisney.go.com."
+console.warn: LoginRecipes: "Falling back to a synchronous message for: https://cdn.registerdisney.go.com."
+console.warn: services.settings: Ignoring preference override of remote settings server
+console.warn: services.settings: Allow by setting MOZ_REMOTE_SETTINGS_DEVTOOLS=1 in the environment
+console.error: (new TypeError("lazy.AsyncShutdown.profileBeforeChange is undefined", "resource://services-settings/Database.sys.mjs", 597))
+JavaScript warning: https://a.espncdn.com/prod/scripts/analytics/ESPN_at_v2.rs.min.js, line 1: WEBGL_debug_renderer_info is deprecated in Firefox and will be removed. Please use RENDERER.
+JavaScript warning: https://a.espncdn.com/prod/scripts/moat/yield.js, line 307: WEBGL_debug_renderer_info is deprecated in Firefox and will be removed. Please use RENDERER.
+JavaScript warning: https://pagead2.googlesyndication.com/bg/0w4HeoaYEDyr3MppZwiwXJgG2WIOQk_JViOVQEuG4uU.js line 2 > eval line 6474 > eval line 1 > eval line 1 > eval, line 1: WEBGL_debug_renderer_info is deprecated in Firefox and will be removed. Please use RENDERER.
+JavaScript error: , line 0: TypeError: NetworkError when attempting to fetch resource.
+JavaScript error: , line 0: TypeError: NetworkError when attempting to fetch resource.
+JavaScript warning: https://a.espncdn.com/prod/scripts/moat/yield.js, line 307: WEBGL_debug_renderer_info is deprecated in Firefox and will be removed. Please use RENDERER.
+JavaScript warning: https://pagead2.googlesyndication.com/bg/0w4HeoaYEDyr3MppZwiwXJgG2WIOQk_JViOVQEuG4uU.js line 2 > eval line 4336 > eval line 1 > eval line 1 > eval, line 1: WEBGL_debug_renderer_info is deprecated in Firefox and will be removed. Please use RENDERER.
+JavaScript warning: https://a.espncdn.com/qa/scripts/moat/yield.js, line 307: WEBGL_debug_renderer_info is deprecated in Firefox and will be removed. Please use RENDERER.
+JavaScript warning: https://pagead2.googlesyndication.com/bg/0w4HeoaYEDyr3MppZwiwXJgG2WIOQk_JViOVQEuG4uU.js line 2 > eval line 643 > eval line 1 > eval line 1 > eval, line 1: WEBGL_debug_renderer_info is deprecated in Firefox and will be removed. Please use RENDERER.
+JavaScript warning: https://a.espncdn.com/qa/scripts/moat/yield.js, line 307: WEBGL_debug_renderer_info is deprecated in Firefox and will be removed. Please use RENDERER.
+JavaScript warning: https://a.espncdn.com/qa/scripts/moat/yield.js, line 307: WEBGL_debug_renderer_info is deprecated in Firefox and will be removed. Please use RENDERER.
+JavaScript warning: https://pagead2.googlesyndication.com/bg/0w4HeoaYEDyr3MppZwiwXJgG2WIOQk_JViOVQEuG4uU.js line 2 > eval line 4949 > eval line 1 > eval line 1 > eval, line 1: WEBGL_debug_renderer_info is deprecated in Firefox and will be removed. Please use RENDERER.
+1692915236524	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+1692915236760	Marionette	WARN	Ignoring event 'pageshow' because document has an invalid readyState of 'uninitialized'.
+JavaScript warning: https://imasdk.googleapis.com/js/core/bridge3.586.0_en.html#goog_1967682361, line 403: Script terminated by timeout at:
+Iy@https://imasdk.googleapis.com/js/core/bridge3.586.0_en.html#goog_1967682361:403:310
+My/this.fa@https://imasdk.googleapis.com/js/core/bridge3.586.0_en.html#goog_1967682361:400:90
+
+JavaScript error: , line 0: TypeError: NetworkError when attempting to fetch resource.
+JavaScript warning: https://a.espncdn.com/qa/scripts/moat/yield.js, line 307: WEBGL_debug_renderer_info is deprecated in Firefox and will be removed. Please use RENDERER.
+JavaScript warning: https://a.espncdn.com/qa/scripts/moat/yield.js, line 307: WEBGL_debug_renderer_info is deprecated in Firefox and will be removed. Please use RENDERER.
+JavaScript warning: https://pagead2.googlesyndication.com/bg/0w4HeoaYEDyr3MppZwiwXJgG2WIOQk_JViOVQEuG4uU.js line 2 > eval line 501 > eval line 1 > eval line 1 > eval, line 1: WEBGL_debug_renderer_info is deprecated in Firefox and will be removed. Please use RENDERER.
+JavaScript warning: https://imasdk.googleapis.com/js/core/bridge3.586.0_en.html#goog_1817154925, line 403: Script terminated by timeout at:
+Iy@https://imasdk.googleapis.com/js/core/bridge3.586.0_en.html#goog_1817154925:403:310
+My/this.fa@https://imasdk.googleapis.com/js/core/bridge3.586.0_en.html#goog_1817154925:400:90
+
+JavaScript error: , line 0: TypeError: NetworkError when attempting to fetch resource.
+JavaScript error: , line 0: TypeError: NetworkError when attempting to fetch resource.
+JavaScript warning: https://pagead2.googlesyndication.com/bg/0w4HeoaYEDyr3MppZwiwXJgG2WIOQk_JViOVQEuG4uU.js line 2 > eval line 6580 > eval line 1 > eval line 1 > eval, line 1: WEBGL_debug_renderer_info is deprecated in Firefox and will be removed. Please use RENDERER.
+JavaScript warning: https://a.espncdn.com/qa/scripts/moat/yield.js, line 307: WEBGL_debug_renderer_info is deprecated in Firefox and will be removed. Please use RENDERER.
+JavaScript warning: https://gum.criteo.com/syncframe?origin=rtus&topUrl=fantasy.espn.com&us_privacy=1YNY#{%22uid%22:{%22value%22:null,%22origin%22:0},%22lwid%22:{%22value%22:null,%22origin%22:0},%22bundle%22:{%22value%22:%22BF98Y19LbyUyQkNEbWlPM1l1QmdhbW1CaElLYjB0anFSNSUyQlFqczJHTFFaOU1oaDRkNGx0dnJqekhHUUJUdyUyRkgweCUyQkZHbGJ0SEc3V1dEWSUyQmNLZVl2UWx6VGJrMDdidGttcnY1aU0lMkJBQ3JWbmUwQ2RlYXIyczFtVGJ3dXJnR3dLZmQ1OSUyRm85akdDaWh6S0NMYUtuYiUyRiUyRnFOblJxNWNoM0kzZVNFMm52ZlclMkZMMGs1T1k4QSUzRA%22,%22origin%22:3},%22optout%22:{%22value%22:false,%22origin%22:0},%22sid%22:{%22value%22:null,%22origin%22:0},%22tld%22:%22espn.com%22,%22topUrl%22:%22fantasy.espn.com%22,%22cw%22:true,%22lsw%22:true,%22origin%22:%22rtus%22,%22rtusCallerId%22:72,%22requestId%22:%220.08875936314286004%22}, line 16: Script terminated by timeout at:
+r.prototype.logPixel@https://gum.criteo.com/syncframe?origin=rtus&topUrl=fantasy.espn.com&us_privacy=1YNY#{%22uid%22:{%22value%22:null,%22origin%22:0},%22lwid%22:{%22value%22:null,%22origin%22:0},%22bundle%22:{%22value%22:%22BF98Y19LbyUyQkNEbWlPM1l1QmdhbW1CaElLYjB0anFSNSUyQlFqczJHTFFaOU1oaDRkNGx0dnJqekhHUUJUdyUyRkgweCUyQkZHbGJ0SEc3V1dEWSUyQmNLZVl2UWx6VGJrMDdidGttcnY1aU0lMkJBQ3JWbmUwQ2RlYXIyczFtVGJ3dXJnR3dLZmQ1OSUyRm85akdDaWh6S0NMYUtuYiUyRiUyRnFOblJxNWNoM0kzZVNFMm52ZlclMkZMMGs1T1k4QSUzRA%22,%22origin%22:3},%22optout%22:{%22value%22:false,%22origin%22:0},%22sid%22:{%22value%22:null,%22origin%22:0},%22tld%22:%22espn.com%22,%22topUrl%22:%22fantasy.espn.com%22,%22cw%22:true,%22lsw%22:true,%22origin%22:%22rtus%22,%22rtusCallerId%22:72,%22requestId%22:%220.08875936314286004%22}:16:3418
+r.prototype.flushEventQueue@https://gum.criteo.com/syncframe?origin=rtus&topUrl=fantasy.espn.com&us_privacy=1YNY#{%22uid%22:{%22value%22:null,%22origin%22:0},%22lwid%22:{%22value%22:null,%22origin%22:0},%22bundle%22:{%22value%22:%22BF98Y19LbyUyQkNEbWlPM1l1QmdhbW1CaElLYjB0anFSNSUyQlFqczJHTFFaOU1oaDRkNGx0dnJqekhHUUJUdyUyRkgweCUyQkZHbGJ0SEc3V1dEWSUyQmNLZVl2UWx6VGJrMDdidGttcnY1aU0lMkJBQ3JWbmUwQ2RlYXIyczFtVGJ3dXJnR3dLZmQ1OSUyRm85akdDaWh6S0NMYUtuYiUyRiUyRnFOblJxNWNoM0kzZVNFMm52ZlclMkZMMGs1T1k4QSUzRA%22,%22origin%22:3},%22optout%22:{%22value%22:false,%22origin%22:0},%22sid%22:{%22value%22:null,%22origin%22:0},%22tld%22:%22espn.com%22,%22topUrl%22:%22fantasy.espn.com%22,%22cw%22:true,%22lsw%22:true,%22origin%22:%22rtus%22,%22rtusCallerId%22:72,%22requestId%22:%220.08875936314286004%22}:16:3152
+r/<@https://gum.criteo.com/syncframe?origin=rtus&topUrl=fantasy.espn.com&us_privacy=1YNY#{%22uid%22:{%22value%22:null,%22origin%22:0},%22lwid%22:{%22value%22:null,%22origin%22:0},%22bundle%22:{%22value%22:%22BF98Y19LbyUyQkNEbWlPM1l1QmdhbW1CaElLYjB0anFSNSUyQlFqczJHTFFaOU1oaDRkNGx0dnJqekhHUUJUdyUyRkgweCUyQkZHbGJ0SEc3V1dEWSUyQmNLZVl2UWx6VGJrMDdidGttcnY1aU0lMkJBQ3JWbmUwQ2RlYXIyczFtVGJ3dXJnR3dLZmQ1OSUyRm85akdDaWh6S0NMYUtuYiUyRiUyRnFOblJxNWNoM0kzZVNFMm52ZlclMkZMMGs1T1k4QSUzRA%22,%22origin%22:3},%22optout%22:{%22value%22:false,%22origin%22:0},%22sid%22:{%22value%22:null,%22origin%22:0},%22tld%22:%22espn.com%22,%22topUrl%22:%22fantasy.espn.com%22,%22cw%22:true,%22lsw%22:true,%22origin%22:%22rtus%22,%22rtusCallerId%22:72,%22requestId%22:%220.08875936314286004%22}:16:3665
+
+JavaScript warning: https://a.espncdn.com/qa/scripts/moat/yield.js, line 307: WEBGL_debug_renderer_info is deprecated in Firefox and will be removed. Please use RENDERER.
+JavaScript warning: https://a.espncdn.com/qa/scripts/moat/yield.js, line 307: WEBGL_debug_renderer_info is deprecated in Firefox and will be removed. Please use RENDERER.
+JavaScript warning: https://pagead2.googlesyndication.com/bg/0w4HeoaYEDyr3MppZwiwXJgG2WIOQk_JViOVQEuG4uU.js line 2 > eval line 3049 > eval line 1 > eval line 1 > eval, line 1: WEBGL_debug_renderer_info is deprecated in Firefox and will be removed. Please use RENDERER.
+[Child 20399, MediaDecoderStateMachine #1] WARNING: 129e17760 Could not set cubeb stream name.: file /builds/worker/checkouts/gecko/dom/media/AudioStream.cpp:321
+JavaScript warning: https://pagead2.googlesyndication.com/bg/53FW8zYQTkJ6aaIrXR-nTnykNiqudoH54JKD_I7-wfM.js line 2 > eval line 3426 > eval line 1 > eval line 1 > eval, line 1: WEBGL_debug_renderer_info is deprecated in Firefox and will be removed. Please use RENDERER.
+JavaScript warning: https://cdn.js7k.com/rq/iv/inside.js, line 1: WEBGL_debug_renderer_info is deprecated in Firefox and will be removed. Please use RENDERER.
+JavaScript error: , line 0: TypeError: NetworkError when attempting to fetch resource.
+JavaScript error: , line 0: TypeError: NetworkError when attempting to fetch resource.
+JavaScript warning: https://a.espncdn.com/qa/scripts/moat/yield.js, line 307: WEBGL_debug_renderer_info is deprecated in Firefox and will be removed. Please use RENDERER.
+JavaScript error: resource://gre/actors/PictureInPictureChild.sys.mjs, line 348: TypeError: can't access dead object
+JavaScript error: resource://gre/actors/PictureInPictureChild.sys.mjs, line 348: TypeError: can't access dead object
+JavaScript warning: https://player.aniview.com/ssync/621cca388ba47d78a102e506/ssync.html?pid=621cca388ba47d78a102e506&gdpr=0&consent=&ccpa=1YNY&r=https%3A%2F%2Fsync.taboola.com%2Fsg%2Faniviewrtb-network%2F1%2Frtb-h%2F%3Ftaboola_hm%3D%5BAV_UID%5D, line 100: unreachable code after return statement
+JavaScript warning: https://player.aniview.com/ssync/621cca388ba47d78a102e506/ssync.html?pid=621cca388ba47d78a102e506&gdpr=0&consent=&ccpa=1YNY&r=https%3A%2F%2Fsync.taboola.com%2Fsg%2Faniviewrtb-network%2F1%2Frtb-h%2F%3Ftaboola_hm%3D%5BAV_UID%5D, line 100: unreachable code after return statement
+JavaScript error: , line 0: TypeError: NetworkError when attempting to fetch resource.
+JavaScript warning: https://a.espncdn.com/qa/scripts/moat/yield.js, line 307: WEBGL_debug_renderer_info is deprecated in Firefox and will be removed. Please use RENDERER.
+JavaScript warning: https://a.espncdn.com/qa/scripts/moat/yield.js, line 307: WEBGL_debug_renderer_info is deprecated in Firefox and will be removed. Please use RENDERER.
+JavaScript error: , line 0: TypeError: NetworkError when attempting to fetch resource.
+JavaScript warning: https://a.espncdn.com/qa/scripts/moat/yield.js, line 307: WEBGL_debug_renderer_info is deprecated in Firefox and will be removed. Please use RENDERER.
+JavaScript warning: https://static.chartbeat.com/js/chartbeat_video.js, line 45: Script terminated by timeout at:
+yc@https://static.chartbeat.com/js/chartbeat_video.js:45:16
+cd.prototype.gb@https://static.chartbeat.com/js/chartbeat_video.js:64:91
+v/<@https://static.chartbeat.com/js/chartbeat_video.js:9:431
+
+JavaScript error: , line 0: InvalidStateError: Navigated away from page
+JavaScript error: , line 0: InvalidStateError: Navigated away from page
+JavaScript error: , line 0: InvalidStateError: Navigated away from page
+1692915754576	Marionette	INFO	Stopped listening on port 59547
+console.warn: TopSitesFeed: Failed to fetch data from Contile server: NetworkError when attempting to fetch resource.
