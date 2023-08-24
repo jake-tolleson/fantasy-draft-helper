@@ -49,10 +49,15 @@ df <- df |>
   mutate(ppg = points/17) |>
   mutate(ppg_ceiling = ceiling/17) |>
   mutate(ppg_floor = floor/17) |>
-  mutate(name=paste(first_name, last_name)) |>
+  mutate(ppg_vor = points_vor/17) |>
+  mutate(ppg_vor_ceiling = ceiling_vor/17) |>
+  mutate(ppg_vor_floor = floor_vor/17) |>
+  mutate(name=case_when(position=='DST'~last_name
+                      ,TRUE~paste(first_name, last_name))) |>
   mutate(cov = sd_pts / points) |>
   mutate(across(where(is.numeric), \(x) round(x, 2))) |>
-  mutate(name=clean_player_names(name))
+  mutate(name=clean_player_names(name)) |>
+  mutate()
 
 df$position <- factor(df$position, levels=c('QB', 'RB', 'WR', 'TE', 'K', 'DST'))
 
@@ -295,21 +300,22 @@ body <- dashboardBody(
     
     tabItem(tabName = "live_draft"
            ,box(fluidRow(column(4, selectizeInput('draft_browser_type', 'Browser Type', c('Edge', 'Firefox', 'Chrome'), 'Edge')))
-                ,fluidRow(column(4, actionButton('launch_browser', "Launch Browser", icon('play'))))
+               ,fluidRow(column(4, actionButton('launch_browser', "Launch Browser", icon('play'))))
                 ,title="Browser Settings", collapsible = T, solidHeader = T, width=4, collapsed=T)
            ,box(fluidRow(column(12,selectInput('my_fantasy_team', 'Fantasy Team Name', c('Placeholder'))))
                ,fluidRow(column(12, actionButton('configure_draft_button', "Configure Draft", icon('user-gear'))))
-               ,br()
-               ,fluidRow(column(12, actionButton('update_draft_button', "Update Draft", icon('refresh'))))
-                ,title="Live Draft Settings", collapsible = T, solidHeader = T, width=4, collapsed=T)
+                ,title="Live Draft Configuration", collapsible = T, solidHeader = T, width=4, collapsed=T)
            ,box(fluidRow(column(12, selectInput("ld_position_filter", 'Position Filter', c('All', 'QB', 'RB', 'WR', 'TE', 'Flex', 'K', 'DST'), 'All')))
+               ,fluidRow(column(12, actionButton('update_draft_button', "Update Draft", icon('refresh'))))
                 ,title="Live Draft Controls", collapsible = T, solidHeader = T, width=4, collapsed=T
            )
            ,box(fluidRow(column(12, div(DT::dataTableOutput("draft_board", height='500px'), style = "font-size:100%")))
                 ,title="Draft Board", collapsible = F, solidHeader = T, width=12, collapsed=F)
-           ,box(fluidRow(column(12, plotlyOutput("ld_ceiling_floor_plot", height='500px')))
+           ,box(fluidRow(column(4, selectInput('ld_ceiling_floor_x_axis', 'Value', c('Points', 'PPG', 'Points VOR', 'PPG VOR'), 'PPG')))
+               ,fluidRow(column(12, plotlyOutput("ld_ceiling_floor_plot", height='500px')))
                 ,title="Ceiling vs Floor", collapsible = F, solidHeader = T, width=6, collapsed=F)
-           ,box(fluidRow(column(12, plotlyOutput("ld_points_v_adp", height='500px')))
+           ,box(fluidRow(column(4, selectInput('ld_points_v_adp_y_axis', 'Value', c('Points', 'PPG', 'Points VOR', 'PPG VOR'), 'Points')))
+               ,fluidRow(column(12, plotlyOutput("ld_points_v_adp", height='500px')))
                 ,title="Points vs ADP", collapsible = F, solidHeader = T, width=6, collapsed=F)
     ),
     
@@ -390,19 +396,19 @@ server <- function(input, output, session) {
   })
   
   next_pick_number <- reactive({
-    picks_made <- nrow(roster())
+    picks_made <- roster() |> drop_na() |> nrow() 
     next_pick <- get_next_pick_number(picks_made, draft_position(), total_teams())
     return(next_pick)
   })
   
   two_picks_away <- reactive({
-    picks_made <- nrow(roster()) + 1
+    picks_made <- roster() |> drop_na() |> nrow() + 1
     next_pick <- get_next_pick_number(picks_made, draft_position(), total_teams())
     return(next_pick)
   })
-  
+  df |> drop_na()
   three_picks_away <- reactive({
-    picks_made <- nrow(roster()) + 2
+    picks_made <- roster() |> drop_na() |> nrow() + 2
     next_pick <- get_next_pick_number(picks_made, draft_position(), total_teams())
     return(next_pick)
   })
@@ -459,7 +465,7 @@ server <- function(input, output, session) {
       drafted_players(
         draft()$pick_history |>
           as_tibble() |>
-          mutate(Player=trimws(gsub('D/ST', '',Player))) |>
+          mutate(Player=trimws(gsub('D/ST', '', Player))) |>
           mutate(Player=clean_player_names(Player)) 
       )
     }, error= function(e) print(paste('Error in update drafted_players', e$message)))
@@ -467,7 +473,7 @@ server <- function(input, output, session) {
     tryCatch({
       draft_board_data(
         df |>
-          anti_join(drafted_players(),by=join_by(name == Player)) |>
+          anti_join(drafted_players(), by=join_by(name == Player)) |>
           arrange(rank)
       ) }, error= function(e) print(paste('Error in update drafted_board_data', e$message)))
     
@@ -490,19 +496,34 @@ server <- function(input, output, session) {
     
     p <- filtered_draft_board() |> arrange(rank) |>
       slice_head(n=12) |>
-      ggplot(aes(x = ppg_ceiling, y = reorder(name, rank, decreasing=TRUE), col=position,
+      mutate(x=case_when(input$ld_ceiling_floor_x_axis=='Points'~points
+                         ,input$ld_ceiling_floor_x_axis=='PPG'~ppg
+                         ,input$ld_ceiling_floor_x_axis=='Points VOR'~points_vor
+                         ,input$ld_ceiling_floor_x_axis=='PPG VOR'~ppg_vor
+                         ,TRUE~points)) |>
+      mutate(x_floor=case_when(input$ld_ceiling_floor_x_axis=='Points'~floor
+                         ,input$ld_ceiling_floor_x_axis=='PPG'~ppg_floor
+                         ,input$ld_ceiling_floor_x_axis=='Points VOR'~floor_vor
+                         ,input$ld_ceiling_floor_x_axis=='PPG VOR'~ppg_vor_floor
+                         ,TRUE~points)) |>
+      mutate(x_ceiling=case_when(input$ld_ceiling_floor_x_axis=='Points'~ceiling
+                         ,input$ld_ceiling_floor_x_axis=='PPG'~ppg_ceiling
+                         ,input$ld_ceiling_floor_x_axis=='Points VOR'~ceiling_vor
+                         ,input$ld_ceiling_floor_x_axis=='PPG VOR'~ppg_vor_ceiling
+                         ,TRUE~points)) |>
+      ggplot(aes(x = x_ceiling, y = reorder(name, rank, decreasing=TRUE), col=position,
                  text = paste(
                    "Name: ", name,
-                   "<br>Ceiling PPG: ", round(ceiling/17,2),
-                   "<br>Avg PPG: ", round(ppg,2),
-                   "<br>Floor PPG: ", round(floor/17,2)
+                   paste0("<br>Ceiling ", input$ld_ceiling_floor_x_axis, ": "), round(x_ceiling,1),
+                   paste0("<br>Avg ", input$ld_ceiling_floor_x_axis, ": "), round(x,1),
+                   paste0("<br>Floor ", input$ld_ceiling_floor_x_axis, ": "), round(x_floor,1)
                  ))) +
-      geom_point(aes(x=ppg), shape=23, size=3, fill=24) +
-      geom_segment(aes(xend = ppg_floor, yend = name), linewidth = 1) +
+      geom_point(aes(x=x), shape=23, size=3, fill=24) +
+      geom_segment(aes(xend = x_floor, yend = name), linewidth = 1) +
       scale_fill_discrete(breaks = c('QB', 'RB', 'WR', 'TE', 'K', 'DST')) +
       scale_colour_manual(values=c("QB"="#F8766D", "RB"="#7CAE00", "WR"="#00B0F6", "TE"="#FF61CC",  "K"='#00BFC4', "DST"="#CD9600"), 
                           labels=c("QB", "RB", "WR", "TE", "K", "DST")) +
-      labs(title = '', x = 'PPG', y = 'Name') +
+      labs(title = '', x = input$ld_ceiling_floor_x_axis, y = 'Name') +
       theme(plot.title = element_text(hjust = 0.5),
             legend.position = "none")
     
@@ -513,21 +534,33 @@ server <- function(input, output, session) {
   output$ld_points_v_adp <- renderPlotly({
     
   p <- filtered_live_data() |> 
-             mutate(available=case_when(name %in% draft_board_data()$name~"available",
-                                        TRUE~'not available')) |> 
-             mutate(tier=case_when(tier>15~15,
-                                   TRUE~tier)) |> 
-             ggplot(aes(x=sqrt(adp), y=sqrt(points), label=name, label2=points, label3=adp)) + 
-             geom_point(aes(col=tier)) +
-             scale_colour_gradientn(colors = rainbow(3)) + 
+             filter(adp <= 200) |>
+             mutate(y=case_when(input$ld_points_v_adp_y_axis=='Points'~points
+                               ,input$ld_points_v_adp_y_axis=='PPG'~ppg
+                               ,input$ld_points_v_adp_y_axis=='Points VOR'~points_vor
+                               ,input$ld_points_v_adp_y_axis=='PPG VOR'~ppg_vor
+                               ,TRUE~points)) |>
+             ggplot(aes(x=sqrt(adp), y=y^0.5, label=name, label2=y, label3=adp)) + 
+             geom_point(data=filtered_live_data() |> 
+                          filter(name %in% draft_board_data()$name) |>
+                          mutate(y=case_when(input$ld_points_v_adp_y_axis=='Points'~points
+                                             ,input$ld_points_v_adp_y_axis=='PPG'~ppg
+                                             ,input$ld_points_v_adp_y_axis=='Points VOR'~points_vor
+                                             ,input$ld_points_v_adp_y_axis=='PPG VOR'~ppg_vor
+                                             ,TRUE~points))) +
              geom_smooth(method='lm', formula= y~x)  +
-             labs(title='', x='ADP', y='Points') +
-             scale_y_continuous(breaks= trans_breaks(function(x)x^2,"sqrt"),
+             labs(title='', x='ADP', y=input$ld_points_v_adp_y_axis) +
+             scale_y_continuous(breaks= trans_breaks(function(x)x^2, "sqrt"),
                                 labels = trans_format(function(x)x^2, "sqrt")) +
              scale_x_continuous(breaks= sqrt(c(5,10,15,25,35,45,55,70,85,100,125,150,175,200)),
                                 labels = as.character(c(5,10,15,25,35,45,55,70,85,100,125,150,175,200)))
   
-           ggplotly(p, tooltip = c("label", "label2", "label3"))
+  p <- ggplotly(p, tooltip = c("label", "label2", "label3"))
+  p$x$data[[1]]$text <- gsub('/>y:', paste0('/>', input$ld_points_v_adp_y_axis, ':'), p$x$data[[1]]$text)
+  p$x$data[[3]]$text <- paste(round(p$x$data[[3]]$x^2,0), ',', round(p$x$data[[3]]$y^2,0))
+  p$x$data[[3]]$hoverinfo <- "text"
+
+  p
   })
   
 }
